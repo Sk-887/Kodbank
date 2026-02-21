@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KodBank – Register</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="auth-page">
+
+  <div class="particles" id="particles"></div>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="logo">
+        <div class="logo-icon">🏦</div>
+        <h1>KodBank</h1>
+        <p class="tagline">Your Trusted Digital Bank</p>
+      </div>
+
+      <h2 class="form-title">Create Account</h2>
+
+      <div id="alert" class="alert hidden"></div>
+
+      <form id="registerForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Choose a username" required />
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="your@email.com" required />
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" placeholder="+91 9876543210" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Create a strong password" required />
+        </div>
+        <div class="form-group">
+          <label for="role">Role</label>
+          <select id="role">
+            <option value="Customer">Customer</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" id="submitBtn">
+          <span class="btn-text">Register Now</span>
+          <span class="btn-loader hidden">⏳ Registering...</span>
+        </button>
+      </form>
+
+      <p class="switch-link">Already have an account? <a href="/login">Login here</a></p>
+    </div>
+  </div>
+
+  <script src="js/particles.js"></script>
+  <script>
+    const form = document.getElementById('registerForm');
+    const alert = document.getElementById('alert');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setLoading(true);
+
+      const data = {
+        username: document.getElementById('username').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        password: document.getElementById('password').value,
+        role: document.getElementById('role').value,
+      };
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          showAlert('✅ ' + json.message, 'success');
+          setTimeout(() => window.location.href = '/login', 1500);
+        } else {
+          showAlert('❌ ' + json.message, 'error');
+        }
+      } catch (err) {
+        showAlert('❌ Network error. Please try again.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    function showAlert(msg, type) {
+      alert.textContent = msg;
+      alert.className = `alert ${type}`;
+    }
+
+    function setLoading(loading) {
+      submitBtn.querySelector('.btn-text').classList.toggle('hidden', loading);
+      submitBtn.querySelector('.btn-loader').classList.toggle('hidden', !loading);
+      submitBtn.disabled = loading;
+    }
+  </script>
+</body>
+</html>

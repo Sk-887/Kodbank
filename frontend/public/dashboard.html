@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KodBank – Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="dashboard-page">
+
+  <canvas id="confettiCanvas"></canvas>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+
+  <div class="dashboard-container">
+
+    <!-- Header -->
+    <header class="dashboard-header">
+      <div class="header-logo">🏦 <span>KodBank</span></div>
+      <div class="header-right">
+        <span class="welcome-text">Welcome, <strong id="usernameDisplay">User</strong>!</span>
+        <button class="btn-logout" id="logoutBtn">Logout</button>
+      </div>
+    </header>
+
+    <!-- Single Column: Token on top, Balance below -->
+    <main class="dashboard-main single-col">
+
+      <!-- TOP: JWT Token Card -->
+      <div class="dashboard-card">
+        <div class="card-icon">🔑</div>
+        <h2>JWT Token</h2>
+        <p class="card-subtitle">Your authentication token details</p>
+
+        <!-- Before clicking -->
+        <div id="tokenPlaceholder" class="token-placeholder">
+          <div class="placeholder-icon">🔓</div>
+          <p>Click <strong>Check Balance</strong> below to reveal your JWT token</p>
+        </div>
+
+        <!-- After clicking -->
+        <div id="tokenCard" class="hidden">
+          <div class="token-header-row">
+            <span class="token-title">Token Breakdown</span>
+            <button class="btn-copy" id="copyBtn" onclick="copyToken()">📋 Copy</button>
+          </div>
+          <div class="token-parts">
+            <div class="token-part">
+              <span class="part-label">🔴 Header</span>
+              <span class="part-value red" id="tokenHeader"></span>
+            </div>
+            <div class="token-part">
+              <span class="part-label">🟣 Payload</span>
+              <span class="part-value purple" id="tokenPayload"></span>
+            </div>
+            <div class="token-part">
+              <span class="part-label">🔵 Signature</span>
+              <span class="part-value blue" id="tokenSignature"></span>
+            </div>
+          </div>
+          <div class="token-decoded">
+            <div class="decoded-title">📦 Decoded Payload</div>
+            <pre id="decodedPayload"></pre>
+          </div>
+          <div class="token-expiry" id="tokenExpiry"></div>
+        </div>
+      </div>
+
+      <!-- BOTTOM: Balance Card -->
+      <div class="dashboard-card">
+        <div class="card-icon">💳</div>
+        <h2>Your Account</h2>
+        <p class="card-subtitle">Check your current balance</p>
+
+        <div id="balanceDisplay" class="balance-display hidden">
+          <div class="balance-label">Available Balance</div>
+          <div class="balance-amount" id="balanceAmount">₹0.00</div>
+          <div class="balance-note">🔒 Secured with JWT Authentication</div>
+        </div>
+
+        <div id="alertBox" class="alert hidden"></div>
+
+        <button class="btn-primary btn-large" id="checkBalanceBtn">
+          <span class="btn-icon">💰</span>
+          <span class="btn-text">Check Balance</span>
+          <span class="btn-loader hidden">⏳ Verifying...</span>
+        </button>
+
+        <div class="info-grid" style="margin-top:20px;">
+          <div class="info-card"><div class="info-icon">🔐</div><div class="info-title">Secure</div></div>
+          <div class="info-card"><div class="info-icon">⚡</div><div class="info-title">Instant</div></div>
+          <div class="info-card"><div class="info-icon">🛡️</div><div class="info-title">Encrypted</div></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="js/confetti.js"></script>
+  <script>
+    const token = localStorage.getItem('kodbank_token');
+
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        document.getElementById('usernameDisplay').textContent = payload.sub || 'User';
+      } catch(e) {}
+    }
+
+    document.getElementById('checkBalanceBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('checkBalanceBtn');
+      const alertBox = document.getElementById('alertBox');
+      const balanceDisplay = document.getElementById('balanceDisplay');
+
+      btn.querySelector('.btn-text').classList.add('hidden');
+      btn.querySelector('.btn-loader').classList.remove('hidden');
+      btn.disabled = true;
+      alertBox.className = 'alert hidden';
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/api/auth/balance', {
+          method: 'GET', headers, credentials: 'include',
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          const formatted = new Intl.NumberFormat('en-IN', {
+            style: 'currency', currency: 'INR'
+          }).format(json.balance);
+
+          document.getElementById('balanceAmount').textContent = formatted;
+          balanceDisplay.classList.remove('hidden');
+          balanceDisplay.classList.add('animate-in');
+
+          if (token) {
+            const parts = token.split('.');
+            document.getElementById('tokenHeader').textContent = parts[0];
+            document.getElementById('tokenPayload').textContent = parts[1];
+            document.getElementById('tokenSignature').textContent = parts[2];
+
+            const decoded = JSON.parse(atob(parts[1]));
+            document.getElementById('decodedPayload').textContent = JSON.stringify(decoded, null, 2);
+
+            const expDate = new Date(decoded.exp * 1000);
+            document.getElementById('tokenExpiry').textContent = `⏳ Expires: ${expDate.toLocaleString()}`;
+
+            document.getElementById('tokenPlaceholder').classList.add('hidden');
+            document.getElementById('tokenCard').classList.remove('hidden');
+            document.getElementById('tokenCard').classList.add('animate-in');
+          }
+
+          fireConfetti();
+          // Scroll to balance smoothly
+          document.getElementById('balanceDisplay').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        } else {
+          alertBox.textContent = '❌ ' + json.message;
+          alertBox.className = 'alert error';
+          if (json.message.toLowerCase().includes('token') || json.message.toLowerCase().includes('login')) {
+            setTimeout(() => window.location.href = '/login', 2000);
+          }
+        }
+      } catch (err) {
+        alertBox.textContent = '❌ Network error. Please try again.';
+        alertBox.className = 'alert error';
+      } finally {
+        btn.querySelector('.btn-text').classList.remove('hidden');
+        btn.querySelector('.btn-loader').classList.add('hidden');
+        btn.disabled = false;
+      }
+    });
+
+    window.copyToken = function() {
+      if (token) {
+        navigator.clipboard.writeText(token);
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy', 2000);
+      }
+    };
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      localStorage.removeItem('kodbank_token');
+      window.location.href = '/login';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KodBank – Login</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="auth-page">
+
+  <div class="particles" id="particles"></div>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="logo">
+        <div class="logo-icon">🏦</div>
+        <h1>KodBank</h1>
+        <p class="tagline">Your Trusted Digital Bank</p>
+      </div>
+
+      <h2 class="form-title">Welcome Back</h2>
+
+      <div id="alert" class="alert hidden"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter your username" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required />
+        </div>
+        <button type="submit" class="btn-primary" id="submitBtn">
+          <span class="btn-text">Login</span>
+          <span class="btn-loader hidden">⏳ Logging in...</span>
+        </button>
+      </form>
+
+      <p class="switch-link">Don't have an account? <a href="/">Register here</a></p>
+    </div>
+  </div>
+
+  <script src="js/particles.js"></script>
+  <script>
+    const form = document.getElementById('loginForm');
+    const alertEl = document.getElementById('alert');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setLoading(true);
+
+      const data = {
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value,
+      };
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+
+        if (json.success) {
+          // Store token in localStorage as backup
+          if (json.token) localStorage.setItem('kodbank_token', json.token);
+          showAlert('✅ Login successful! Redirecting...', 'success');
+          setTimeout(() => window.location.href = '/userdashboard', 1000);
+        } else {
+          showAlert('❌ ' + json.message, 'error');
+        }
+      } catch (err) {
+        showAlert('❌ Network error. Please try again.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    function showAlert(msg, type) {
+      alertEl.textContent = msg;
+      alertEl.className = `alert ${type}`;
+    }
+
+    function setLoading(loading) {
+      submitBtn.querySelector('.btn-text').classList.toggle('hidden', loading);
+      submitBtn.querySelector('.btn-loader').classList.toggle('hidden', !loading);
+      submitBtn.disabled = loading;
+    }
+  </script>
+</body>
+</html>
