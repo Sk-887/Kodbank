@@ -37,12 +37,16 @@
         </button>
       </form>
 
-      <p class="switch-link">Don't have an account? <a href="/">Register here</a></p>
+      <p class="switch-link">Don't have an account? 
+        <a href="register.html">Register here</a>
+      </p>
     </div>
   </div>
 
   <script src="js/particles.js"></script>
   <script>
+    const API_BASE = "https://kodbank-l341.onrender.com"; // 🔥 Your Render Backend URL
+
     const form = document.getElementById('loginForm');
     const alertEl = document.getElementById('alert');
     const submitBtn = document.getElementById('submitBtn');
@@ -57,22 +61,24 @@
       };
 
       try {
-        const res = await fetch('/api/auth/login', {
+        const res = await fetch(`${API_BASE}/api/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify(data),
         });
+
         const json = await res.json();
 
         if (json.success) {
-          // Store token in localStorage as backup
-          if (json.token) localStorage.setItem('kodbank_token', json.token);
+          if (json.token) {
+            localStorage.setItem('kodbank_token', json.token);
+          }
           showAlert('✅ Login successful! Redirecting...', 'success');
-          setTimeout(() => window.location.href = '/userdashboard', 1000);
+          setTimeout(() => window.location.href = 'dashboard.html', 1000);
         } else {
           showAlert('❌ ' + json.message, 'error');
         }
+
       } catch (err) {
         showAlert('❌ Network error. Please try again.', 'error');
       } finally {

@@ -51,14 +51,18 @@
         </button>
       </form>
 
-      <p class="switch-link">Already have an account? <a href="/login">Login here</a></p>
+      <p class="switch-link">Already have an account? 
+        <a href="login.html">Login here</a>
+      </p>
     </div>
   </div>
 
   <script src="js/particles.js"></script>
   <script>
+    const API_BASE = "https://kodbank-l341.onrender.com"; // 🔥 Your Render Backend URL
+
     const form = document.getElementById('registerForm');
-    const alert = document.getElementById('alert');
+    const alertBox = document.getElementById('alert');
     const submitBtn = document.getElementById('submitBtn');
 
     form.addEventListener('submit', async (e) => {
@@ -74,19 +78,21 @@
       };
 
       try {
-        const res = await fetch('/api/auth/register', {
+        const res = await fetch(`${API_BASE}/api/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
         });
+
         const json = await res.json();
 
         if (json.success) {
           showAlert('✅ ' + json.message, 'success');
-          setTimeout(() => window.location.href = '/login', 1500);
+          setTimeout(() => window.location.href = 'login.html', 1500);
         } else {
           showAlert('❌ ' + json.message, 'error');
         }
+
       } catch (err) {
         showAlert('❌ Network error. Please try again.', 'error');
       } finally {
@@ -95,8 +101,8 @@
     });
 
     function showAlert(msg, type) {
-      alert.textContent = msg;
-      alert.className = `alert ${type}`;
+      alertBox.textContent = msg;
+      alertBox.className = `alert ${type}`;
     }
 
     function setLoading(loading) {
