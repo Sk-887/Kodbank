@@ -27,39 +27,46 @@
           <label for="username">Username</label>
           <input type="text" id="username" placeholder="Choose a username" required />
         </div>
+
         <div class="form-group">
           <label for="email">Email</label>
           <input type="email" id="email" placeholder="your@email.com" required />
         </div>
+
         <div class="form-group">
           <label for="phone">Phone</label>
           <input type="tel" id="phone" placeholder="+91 9876543210" required />
         </div>
+
         <div class="form-group">
           <label for="password">Password</label>
           <input type="password" id="password" placeholder="Create a strong password" required />
         </div>
+
         <div class="form-group">
           <label for="role">Role</label>
           <select id="role">
             <option value="Customer">Customer</option>
           </select>
         </div>
+
         <button type="submit" class="btn-primary" id="submitBtn">
           <span class="btn-text">Register Now</span>
           <span class="btn-loader hidden">⏳ Registering...</span>
         </button>
       </form>
 
-      <p class="switch-link">Already have an account? 
+      <p class="switch-link">
+        Already have an account?
         <a href="login.html">Login here</a>
       </p>
     </div>
   </div>
 
   <script src="js/particles.js"></script>
+
   <script>
-    const API_BASE = "https://kodbank-l341.onrender.com"; // 🔥 Your Render Backend URL
+    const API_BASE = "https://kodbank-l341.onrender.com";
 
     const form = document.getElementById('registerForm');
     const alertBox = document.getElementById('alert');
@@ -78,38 +85,47 @@
       };
 
       try {
-        const res = await fetch(`${API_BASE}/api/auth/register`, {
+        const response = await fetch(`${API_BASE}/api/auth/register`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
         });
 
-        const json = await res.json();
-
-        if (json.success) {
-          showAlert('✅ ' + json.message, 'success');
-          setTimeout(() => window.location.href = 'login.html', 1500);
-        } else {
-          showAlert('❌ ' + json.message, 'error');
+        if (!response.ok) {
+          throw new Error("Server not responding");
         }
 
-      } catch (err) {
-        showAlert('❌ Network error. Please try again.', 'error');
+        const result = await response.json();
+
+        if (result.success) {
+          showAlert("✅ " + result.message, "success");
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 1500);
+        } else {
+          showAlert("❌ " + result.message, "error");
+        }
+
+      } catch (error) {
+        showAlert("❌ Unable to connect to server.", "error");
       } finally {
         setLoading(false);
       }
     });
 
-    function showAlert(msg, type) {
-      alertBox.textContent = msg;
+    function showAlert(message, type) {
+      alertBox.textContent = message;
       alertBox.className = `alert ${type}`;
     }
 
-    function setLoading(loading) {
-      submitBtn.querySelector('.btn-text').classList.toggle('hidden', loading);
-      submitBtn.querySelector('.btn-loader').classList.toggle('hidden', !loading);
-      submitBtn.disabled = loading;
+    function setLoading(state) {
+      submitBtn.querySelector('.btn-text').classList.toggle('hidden', state);
+      submitBtn.querySelector('.btn-loader').classList.toggle('hidden', !state);
+      submitBtn.disabled = state;
     }
   </script>
+
 </body>
 </html>
