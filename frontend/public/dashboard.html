@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>KodBank – Dashboard</title>
-  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- ✅ FIXED PATH -->
+  <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body class="dashboard-page">
 
@@ -73,14 +75,13 @@
   </div>
 
   <script>
-    const API_BASE = "https://kodbank-l341.onrender.com"; // 🔥 your backend URL
+    const API_BASE = "https://kodbank-l341.onrender.com";
     const token = localStorage.getItem("kodbank_token");
 
     if (!token) {
       window.location.href = "login.html";
     }
 
-    // Show username
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
@@ -106,7 +107,6 @@
 
         if (json.success) {
 
-          // ✅ Show balance
           const formatted = new Intl.NumberFormat("en-IN", {
             style: "currency",
             currency: "INR"
@@ -115,7 +115,6 @@
           document.getElementById("balanceAmount").textContent = formatted;
           balanceDisplay.classList.remove("hidden");
 
-          // ✅ Show JWT
           const parts = token.split(".");
           document.getElementById("tokenHeader").textContent = parts[0];
           document.getElementById("tokenPayload").textContent = parts[1];
@@ -157,5 +156,6 @@
       window.location.href = "login.html";
     });
   </script>
+
 </body>
 </html>

@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>KodBank – Register</title>
-  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- 🔥 FIXED PATH -->
+  <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body class="auth-page">
 
@@ -63,7 +65,7 @@
     </div>
   </div>
 
-  <script src="js/particles.js"></script>
+  <script src="./js/particles.js"></script>
 
   <script>
     const API_BASE = "https://kodbank-l341.onrender.com";
@@ -87,23 +89,15 @@
       try {
         const response = await fetch(`${API_BASE}/api/auth/register`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
-
-        if (!response.ok) {
-          throw new Error("Server not responding");
-        }
 
         const result = await response.json();
 
         if (result.success) {
           showAlert("✅ " + result.message, "success");
-          setTimeout(() => {
-            window.location.href = "login.html";
-          }, 1500);
+          setTimeout(() => window.location.href = "login.html", 1500);
         } else {
           showAlert("❌ " + result.message, "error");
         }
